@@ -78,7 +78,7 @@ class ExampleMoveItTrajectories(object):
             arm_group_name = "arm"
             self.robot = moveit_commander.RobotCommander("robot_description")
             self.scene = moveit_commander.PlanningSceneInterface(ns=rospy.get_namespace())
-            self.arm_group = moveit_commander.MoveGroupCommander(arm_group_name, ns=rospy.get_namespace())
+            self.arm_group = moveit_commander.MoveGroupCommander(arm_group_name)
             self.display_trajectory_publisher = rospy.Publisher(rospy.get_namespace() + 'move_group/display_planned_path',
                     moveit_msgs.msg.DisplayTrajectory, queue_size=20)
 
@@ -90,6 +90,7 @@ class ExampleMoveItTrajectories(object):
         except Exception as e:
             rospy.logerr(e)
             self.is_init_success = False
+            print("bad...................")
         else:
             self.is_init_success = True
 
@@ -117,8 +118,6 @@ class ExampleMoveItTrajectories(object):
         # self.trajectory.points[0].time_from_start = rospy.Duration(2.0)
 
         rospy.sleep(2.0)
-
-        rospy.loginfo("Initializing node in namespace " + rospy.get_namespace())
 
 
     def move_via_trajectory(self):
@@ -189,6 +188,18 @@ class ExampleMoveItTrajectories(object):
         self.arm_group.set_named_target("home")
         return self.arm_group.go(wait=True)
 
+    def reach_gripper_position(self, relative_position):
+        gripper_group = self.gripper_group
+    
+        # We only have to move this joint because all others are mimic!
+        gripper_joint = self.robot.get_joint(self.gripper_joint_name)
+        gripper_max_absolute_pos = gripper_joint.max_bound()
+        gripper_min_absolute_pos = gripper_joint.min_bound()
+        try:
+            val = gripper_joint.move(relative_position * (gripper_max_absolute_pos - gripper_min_absolute_pos) + gripper_min_absolute_pos, True)
+            return val
+        except:
+            return False 
 
 
 def main():
@@ -206,6 +217,8 @@ def main():
         rospy.loginfo("success = {}".format(success))
         if success:
             success &= example.home_the_robot()
+
+            success &= example.reach_gripper_position(1.0)
 
         # cmd_new = [0.0] * NO_DOF
         # example.zehui_reach_joint_angles(cmd_new, tolerance=0.01)

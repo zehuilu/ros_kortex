@@ -1,0 +1,14 @@
+<launch>
+
+    <!-- Arm and gripper type -->
+    <arg name="arm" default="gen3"/>
+    <arg name="dof" default="7" if="$(eval arg('arm') == 'gen3')"/> <!-- Number of degrees of freedom of the arm -->
+    <arg name="dof" default="6" if="$(eval arg('arm') == 'gen3_lite')"/> <!-- Number of degrees of freedom of the arm -->
+    <arg name="vision" default="true"/> <!-- True if the arm has a Vision module -->
+    <arg name="gripper" default="robotiq_2f_85" />
+    <arg name="robot_name" default="my_$(arg arm)"/>
+
+    <!-- Launch the example in that namespace -->
+    <node name="gazebo_zehui" pkg="kortex_gazebo" type="exe_traj_matlab_ros_gazebo.py" ns="$(arg robot_name)" output="screen"/>
+
+</launch>
